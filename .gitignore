@@ -38,6 +38,7 @@ prisma/*.db-journal
 
 # vercel
 .vercel
+vercel-deploy-files.json
 
 # typescript
 *.tsbuildinfo

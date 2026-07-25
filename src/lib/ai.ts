@@ -6,9 +6,11 @@
 export type NarrativeSource = "ai" | "template";
 
 export async function generateDailyNarrative(
-  _reportData: unknown,
-  _projectContext: unknown,
+  reportData: unknown,
+  projectContext: unknown,
 ): Promise<{ narrative: string; source: NarrativeSource }> {
+  void reportData;
+  void projectContext;
   return {
     narrative: "",
     source: "template",
@@ -16,9 +18,11 @@ export async function generateDailyNarrative(
 }
 
 export async function generateWeeklyExecutiveSummary(
-  _weekFacts: unknown,
-  _projectContext: unknown,
+  weekFacts: unknown,
+  projectContext: unknown,
 ): Promise<{ narrative: string; source: NarrativeSource }> {
+  void weekFacts;
+  void projectContext;
   return {
     narrative: "",
     source: "template",
