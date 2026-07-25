@@ -26,7 +26,15 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
 .env*.local
+
+# sqlite (keep committed demo.db for Vercel seed snapshot)
+prisma/dev.db
+prisma/dev.db-journal
+prisma/*.db
+prisma/*.db-journal
+!prisma/demo.db
 
 # vercel
 .vercel
@@ -34,3 +42,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# prisma init skill scaffolds (not part of the app)
+.agents/
+.claude/
+.windsurf/
+skills-lock.json

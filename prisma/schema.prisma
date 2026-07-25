@@ -1,0 +1,264 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enum-like values stored as String for SQLite + Postgres portability.
+// Allowed values documented next to each field.
+
+model Organization {
+  id   String @id @default(cuid())
+  name String
+  /// PRIME | SUBCONTRACTOR | OWNER_AGENCY
+  type String
+
+  users         User[]
+  primeProjects Project[]     @relation("PrimeContractor")
+  subcontracts  Subcontract[]
+}
+
+model User {
+  id             String       @id @default(cuid())
+  name           String
+  email          String       @unique
+  /// EXECUTIVE | PROJECT_MANAGER | FIELD_INSPECTOR
+  role           String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+model Project {
+  id                 String       @id @default(cuid())
+  name               String
+  contractNumber     String       @unique
+  owningAgency       String
+  primeContractorId  String
+  primeContractor    Organization @relation("PrimeContractor", fields: [primeContractorId], references: [id])
+  contractValueCents Int
+  retainagePct       Float
+  startDate          DateTime
+  endDate            DateTime
+  /// ACTIVE | ON_HOLD | COMPLETE
+  status             String
+  address            String
+  lat                Float
+  lng                Float
+  description        String
+
+  sovLines        SovLine[]
+  milestones      Milestone[]
+  subcontracts    Subcontract[]
+  workOrders      WorkOrder[]
+  photos          Photo[]
+  dailyReports    DailyReport[]
+  changeOrders    ChangeOrder[]
+  payApplications PayApplication[]
+  exceptionAlerts ExceptionAlert[]
+  documents       Document[]
+}
+
+model SovLine {
+  id                  String  @id @default(cuid())
+  projectId           String
+  project             Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  code                String
+  description         String
+  scheduledValueCents Int
+  unit                String?
+  qtyScheduled        Float?
+  sortOrder           Int
+
+  workOrders  WorkOrder[]
+  payAppLines PayAppLine[]
+
+  @@unique([projectId, code])
+}
+
+model Milestone {
+  id           String    @id @default(cuid())
+  projectId    String
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name         String
+  plannedDate  DateTime
+  forecastDate DateTime?
+  actualDate   DateTime?
+  /// PENDING | AT_RISK | COMPLETE
+  status       String
+}
+
+model Subcontract {
+  id              String       @id @default(cuid())
+  projectId       String
+  project         Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  subcontractorId String
+  subcontractor   Organization @relation(fields: [subcontractorId], references: [id])
+  trade           String
+  valueCents      Int
+
+  workOrders WorkOrder[]
+}
+
+model WorkOrder {
+  id            String      @id @default(cuid())
+  projectId     String
+  project       Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  number        String
+  title         String
+  description   String
+  subcontractId String
+  subcontract   Subcontract @relation(fields: [subcontractId], references: [id])
+  sovLineId     String
+  sovLine       SovLine     @relation(fields: [sovLineId], references: [id])
+  /// DRAFT | ISSUED | IN_PROGRESS | COMPLETED | VERIFIED | DEFICIENT
+  status        String
+  issuedAt      DateTime?
+  dueDate       DateTime?
+  completedAt   DateTime?
+  verifiedAt    DateTime?
+  qtyClaimed    Float?
+  qtyVerified   Float?
+
+  fieldVerifications FieldVerification[]
+  photos             Photo[]
+
+  @@unique([projectId, number])
+}
+
+model FieldVerification {
+  id            String    @id @default(cuid())
+  workOrderId   String
+  workOrder     WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  inspectorName String
+  date          DateTime
+  /// PASS | FAIL | PARTIAL
+  result        String
+  notes         String
+  /// JSON: [{item, status, note?}]
+  checklist     String
+
+  photos Photo[]
+}
+
+model Photo {
+  id                  String             @id @default(cuid())
+  projectId           String
+  project             Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workOrderId         String?
+  workOrder           WorkOrder?         @relation(fields: [workOrderId], references: [id])
+  fieldVerificationId String?
+  fieldVerification   FieldVerification? @relation(fields: [fieldVerificationId], references: [id])
+  dailyReportId       String?
+  dailyReport         DailyReport?       @relation(fields: [dailyReportId], references: [id])
+  url                 String
+  /// BEFORE | PROGRESS | AFTER | DEFECT
+  kind                String
+  lat                 Float?
+  lng                 Float?
+  takenAt             DateTime?
+  caption             String
+}
+
+model DailyReport {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  date            DateTime
+  weatherSummary  String
+  tempLowF        Int?
+  tempHighF       Int?
+  /// JSON: [{organization, trade, headcount, hours}]
+  crew            String
+  /// JSON: [{sovLineId, description, qty?, unit?}]
+  workPerformed   String
+  /// JSON: [{name, count, status}]
+  equipment       String
+  safetyIncidents String
+  delays          String
+  visitorLog      String
+  narrative       String
+  /// DRAFT | SUBMITTED
+  status          String
+
+  photos Photo[]
+
+  @@unique([projectId, date])
+}
+
+model ChangeOrder {
+  id          String    @id @default(cuid())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  number      String
+  title       String
+  description String
+  amountCents Int
+  /// PROPOSED | SUBMITTED | APPROVED | REJECTED
+  status      String
+  submittedAt DateTime?
+  decidedAt   DateTime?
+
+  @@unique([projectId, number])
+}
+
+model PayApplication {
+  id          String    @id @default(cuid())
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  number      Int
+  periodStart DateTime
+  periodEnd   DateTime
+  /// DRAFT | SUBMITTED | APPROVED | PAID
+  status      String
+  submittedAt DateTime?
+  approvedAt  DateTime?
+  paidAt      DateTime?
+
+  lines PayAppLine[]
+
+  @@unique([projectId, number])
+}
+
+model PayAppLine {
+  id                   String         @id @default(cuid())
+  payApplicationId     String
+  payApplication       PayApplication @relation(fields: [payApplicationId], references: [id], onDelete: Cascade)
+  sovLineId            String
+  sovLine              SovLine        @relation(fields: [sovLineId], references: [id])
+  previousCents        Int
+  thisPeriodCents      Int
+  storedMaterialsCents Int
+  retainageCents       Int
+
+  @@unique([payApplicationId, sovLineId])
+}
+
+model ExceptionAlert {
+  id         String    @id @default(cuid())
+  projectId  String
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type       String
+  /// INFO | WARNING | CRITICAL
+  severity   String
+  message    String
+  entityType String?
+  entityId   String?
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title      String
+  /// CONTRACT | SUBMITTAL | RFI | PERMIT | INSURANCE | PAYROLL | OTHER
+  category   String
+  url        String
+  uploadedAt DateTime
+  /// JSON string[]
+  tags       String
+}
