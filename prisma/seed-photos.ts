@@ -6,6 +6,7 @@ export type SeedPhotoMeta = {
   woNumber: string;
   kind: string;
   dateLabel: string;
+  projectLabel?: string;
 };
 
 export function ensureSeedUploadDir(): string {
@@ -14,9 +15,17 @@ export function ensureSeedUploadDir(): string {
   return dir;
 }
 
-export function writePlaceholderSvg(meta: SeedPhotoMeta, dir: string): string {
-  const { filename, woNumber, kind, dateLabel } = meta;
+/** Write SVG under `dir`; public URL is `/uploads/seed/{urlSubdir?}/{filename}`. */
+export function writePlaceholderSvg(
+  meta: SeedPhotoMeta,
+  dir: string,
+  urlSubdir?: string,
+): string {
+  const { filename, woNumber, kind, dateLabel, projectLabel } = meta;
   const filePath = path.join(dir, filename);
+  const footer = projectLabel
+    ? `${projectLabel} — seed photo`
+    : "Franklin Court Federal Building — seed photo";
 
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
@@ -25,11 +34,14 @@ export function writePlaceholderSvg(meta: SeedPhotoMeta, dir: string): string {
   <text x="400" y="250" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="36" fill="#FFFFFF" font-weight="600">${escapeXml(woNumber)}</text>
   <text x="400" y="310" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" fill="#0EA5E9">${escapeXml(kind)}</text>
   <text x="400" y="360" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="18" fill="#94A3B8">${escapeXml(dateLabel)}</text>
-  <text x="400" y="520" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="14" fill="#64748B">Franklin Court Federal Building — seed photo</text>
+  <text x="400" y="520" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="14" fill="#64748B">${escapeXml(footer)}</text>
 </svg>`;
 
   fs.writeFileSync(filePath, svg, "utf8");
-  return `/uploads/seed/${filename}`;
+  const base = urlSubdir
+    ? `/uploads/seed/${urlSubdir}/${filename}`
+    : `/uploads/seed/${filename}`;
+  return base;
 }
 
 function escapeXml(value: string): string {

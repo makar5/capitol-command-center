@@ -39,11 +39,11 @@ export default function LoginPage() {
           <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-xs text-slate-400">
             <span className="inline-flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-sky" />
-              Franklin Court demo project
+              4 seeded federal projects
             </span>
             <span className="inline-flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-status-verified" />
-              Seeded sales environment
+              Flip sites from the sidebar
             </span>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/shell/AppShell";
 import { db } from "@/lib/db";
 import { ensureExceptionsFresh } from "@/app/actions/exceptions";
+import { sortDemoProjects } from "@/lib/projects";
 
 export default async function ProjectLayout({
   children,
@@ -16,6 +17,8 @@ export default async function ProjectLayout({
       id: true,
       name: true,
       contractNumber: true,
+      owningAgency: true,
+      status: true,
     },
   });
 
@@ -23,7 +26,7 @@ export default async function ProjectLayout({
 
   await ensureExceptionsFresh(project.id);
 
-  const [exceptionCritical, exceptionTotal] = await Promise.all([
+  const [exceptionCritical, exceptionTotal, allProjects] = await Promise.all([
     db.exceptionAlert.count({
       where: {
         projectId: project.id,
@@ -34,6 +37,14 @@ export default async function ProjectLayout({
     db.exceptionAlert.count({
       where: { projectId: project.id, resolvedAt: null },
     }),
+    db.project.findMany({
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        owningAgency: true,
+      },
+    }),
   ]);
 
   return (
@@ -41,6 +52,9 @@ export default async function ProjectLayout({
       projectId={project.id}
       projectName={project.name}
       contractNumber={project.contractNumber}
+      owningAgency={project.owningAgency}
+      status={project.status}
+      projects={sortDemoProjects(allProjects)}
       exceptionCritical={exceptionCritical}
       exceptionTotal={exceptionTotal}
     >

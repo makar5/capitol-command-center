@@ -19,6 +19,7 @@ import {
   revisedContractValueCents,
   timeElapsedPct,
 } from "@/lib/progress";
+import { ensureExceptionsFresh } from "@/app/actions/exceptions";
 
 export default async function ProjectDashboardPage({
   params,
@@ -26,6 +27,7 @@ export default async function ProjectDashboardPage({
   params: { id: string };
 }) {
   const today = startOfDay(new Date());
+  await ensureExceptionsFresh(params.id);
 
   const project = await db.project.findUnique({
     where: { id: params.id },

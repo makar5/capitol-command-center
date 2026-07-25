@@ -10,6 +10,7 @@ import {
   startOfDay,
 } from "date-fns";
 import { ensureSeedUploadDir, writePlaceholderSvg } from "./seed-photos";
+import { seedPortfolioProjects } from "./seed-portfolio";
 
 const prisma = new PrismaClient();
 
@@ -1155,11 +1156,32 @@ async function main(): Promise<void> {
 
   // Exception alerts are computed on first dashboard load via refreshExceptions.
 
-  console.log("Seed complete.");
-  console.log(`  Project: ${project.name}`);
-  console.log(`  Work orders: ${workOrders.length}`);
-  console.log(`  Photos: ${photoSeq}`);
-  console.log(`  Daily reports: ${reportDays.length}`);
+  console.log(`Franklin Court seeded: ${workOrders.length} WOs, ${photoSeq} photos, ${reportDays.length} daily reports`);
+
+  await prisma.organization.createMany({
+    data: [
+      {
+        id: "org_va",
+        name: "U.S. Department of Veterans Affairs",
+        type: "OWNER_AGENCY",
+      },
+      {
+        id: "org_usace",
+        name: "U.S. Army Corps of Engineers",
+        type: "OWNER_AGENCY",
+      },
+    ],
+  });
+
+  await seedPortfolioProjects(prisma, {
+    primeId: prime.id,
+    subMechId: subMech.id,
+    subElecId: subElec.id,
+    subFacadeId: subFacade.id,
+    subAbateId: subAbate.id,
+  });
+
+  console.log("Seed complete — 4 demo projects ready.");
   void gsa;
 }
 

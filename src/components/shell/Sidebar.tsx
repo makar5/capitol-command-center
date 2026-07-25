@@ -1,26 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { projectNav } from "./nav";
 import type { DemoRole } from "@/lib/roles";
+import type { ProjectOption } from "@/lib/projects";
 
 export function Sidebar({
   projectId,
   projectName,
+  projects,
   role,
   exceptionCritical = 0,
   exceptionTotal = 0,
 }: {
   projectId: string;
   projectName: string;
+  projects: ProjectOption[];
   role: DemoRole;
   exceptionCritical?: number;
   exceptionTotal?: number;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const items = projectNav(projectId);
   const dashboardHref = `/projects/${projectId}`;
+
+  function switchProject(nextId: string) {
+    if (nextId === projectId) return;
+    const suffix = pathname.startsWith(`/projects/${projectId}`)
+      ? pathname.slice(`/projects/${projectId}`.length)
+      : "";
+    router.push(`/projects/${nextId}${suffix || ""}`);
+  }
 
   return (
     <aside className="no-print flex w-60 shrink-0 flex-col bg-navy text-white">
@@ -34,15 +46,36 @@ export function Sidebar({
       </div>
 
       <div className="border-b border-white/10 px-4 py-3">
-        <label className="text-[11px] uppercase tracking-wide text-slate-400">
+        <label
+          htmlFor="project-switcher"
+          className="text-[11px] uppercase tracking-wide text-slate-400"
+        >
           Project
         </label>
         <select
+          id="project-switcher"
           className="mt-1 w-full truncate rounded border border-white/15 bg-navy-header/40 px-2 py-1.5 text-xs text-white"
-          defaultValue={projectId}
-          disabled
+          value={projectId}
+          onChange={(e) => switchProject(e.target.value)}
+          aria-label="Switch project"
         >
-          <option value={projectId}>{projectName}</option>
+          {(projects.length > 0
+            ? projects
+            : [
+                {
+                  id: projectId,
+                  name: projectName,
+                  status: "ACTIVE",
+                  owningAgency: "",
+                },
+              ]
+          ).map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.owningAgency ? `${p.owningAgency} · ` : ""}
+              {shortProjectName(p.name)}
+              {p.status !== "ACTIVE" ? ` (${formatStatus(p.status)})` : ""}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -93,4 +126,13 @@ export function Sidebar({
       </div>
     </aside>
   );
+}
+
+function shortProjectName(name: string): string {
+  const cut = name.split("—")[0]?.trim() ?? name;
+  return cut.length > 42 ? `${cut.slice(0, 40)}…` : cut;
+}
+
+function formatStatus(status: string): string {
+  return status.replace(/_/g, " ");
 }

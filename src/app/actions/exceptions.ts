@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { startOfDay } from "date-fns";
 import { z } from "zod";
@@ -24,8 +25,11 @@ export async function refreshExceptions(
   return result;
 }
 
-/** Recompute when none are open or the newest open alert is older than 24h. */
-export async function ensureExceptionsFresh(projectId: string): Promise<void> {
+/**
+ * Recompute when none are open or the newest open alert is older than 24h.
+ * Cached per-request so layout + page share one refresh (avoids empty panel race).
+ */
+export const ensureExceptionsFresh = cache(async (projectId: string): Promise<void> => {
   const today = startOfDay(new Date());
   const newest = await db.exceptionAlert.findFirst({
     where: { projectId, resolvedAt: null },
@@ -41,4 +45,4 @@ export async function ensureExceptionsFresh(projectId: string): Promise<void> {
     await refreshExceptionsForProject(projectId);
     revalidatePath(`/projects/${projectId}`);
   }
-}
+});

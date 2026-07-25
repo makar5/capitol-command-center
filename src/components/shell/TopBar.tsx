@@ -6,17 +6,33 @@ import { DEMO_ACCOUNT } from "@/lib/auth";
 export function TopBar({
   projectName,
   contractNumber,
+  owningAgency,
+  status,
   role,
 }: {
   projectName: string;
   contractNumber: string;
+  owningAgency: string;
+  status: string;
   role: DemoRole;
 }) {
   return (
     <header className="no-print flex h-14 items-center justify-between gap-4 border-b border-slate-200 bg-navy-header px-5 text-white">
       <div className="min-w-0">
         <div className="truncate text-sm font-semibold">{projectName}</div>
-        <div className="num text-xs text-sky-100/80">{contractNumber}</div>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-sky-100/80">
+          <span className="num">{contractNumber}</span>
+          <span className="text-sky-100/40">·</span>
+          <span>{owningAgency}</span>
+          {status !== "ACTIVE" ? (
+            <>
+              <span className="text-sky-100/40">·</span>
+              <span className="rounded bg-amber-400/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-200">
+                {status.replace(/_/g, " ")}
+              </span>
+            </>
+          ) : null}
+        </div>
       </div>
       <div className="flex shrink-0 items-center gap-3">
         <div className="hidden text-right sm:block">

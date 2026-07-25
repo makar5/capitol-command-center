@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { credentialsMatch, SESSION_COOKIE, SESSION_VALUE } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { DEFAULT_PROJECT_ID } from "@/lib/projects";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -40,10 +41,16 @@ export async function loginAction(
     secure: process.env.VERCEL === "1",
   });
 
-  const project = await db.project.findFirst({
-    orderBy: { startDate: "asc" },
+  const flagship = await db.project.findUnique({
+    where: { id: DEFAULT_PROJECT_ID },
     select: { id: true },
   });
+  const project =
+    flagship ??
+    (await db.project.findFirst({
+      orderBy: { startDate: "asc" },
+      select: { id: true },
+    }));
 
   redirect(project ? `/projects/${project.id}` : "/");
 }
