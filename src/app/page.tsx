@@ -1,7 +1,14 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { isAuthenticatedSession, SESSION_COOKIE } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export default async function HomePage() {
+  const session = cookies().get(SESSION_COOKIE)?.value;
+  if (!isAuthenticatedSession(session)) {
+    redirect("/login");
+  }
+
   const project = await db.project.findFirst({
     orderBy: { startDate: "asc" },
     select: { id: true },

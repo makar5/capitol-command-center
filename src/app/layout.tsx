@@ -13,7 +13,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Command Center — Federal Project Ops",
+  title: "Capitol Command Center",
   description:
     "Evidence-to-payment operations for federal construction projects (seeded demo).",
 };

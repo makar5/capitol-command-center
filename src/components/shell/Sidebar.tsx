@@ -26,7 +26,7 @@ export function Sidebar({
     <aside className="no-print flex w-60 shrink-0 flex-col bg-navy text-white">
       <div className="border-b border-white/10 px-4 py-4">
         <div className="text-[11px] font-medium uppercase tracking-wider text-sky">
-          Command Center
+          Capitol Command Center
         </div>
         <div className="mt-1 text-sm font-semibold leading-snug">
           Federal Project Ops
